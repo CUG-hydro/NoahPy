@@ -21,17 +21,16 @@ from torch import nn, tensor, Tensor
 class ConstantsModule(nn.Module):
     def __init__(self):
         super(ConstantsModule, self).__init__()
-        # 初始化常量
         self.EPSILON = torch.tensor(1.0e-15)
-        self.TFREEZ = torch.tensor(273.15)  # 冰点温度
-        self.LVH2O = torch.tensor(2.501e6)  # 水的汽化潜热
-        self.LSUBS = torch.tensor(2.83e6)  # 水的凝结潜热
-        self.R = torch.tensor(287.04)  # 气体常数R
+        self.TFREEZ = torch.tensor(273.15) 
+        self.LVH2O = torch.tensor(2.501e6)  
+        self.LSUBS = torch.tensor(2.83e6) 
+        self.R = torch.tensor(287.04)  
         self.RD = torch.tensor(287.04)
         self.SIGMA = torch.tensor(5.67E-8)
         self.CPH2O = torch.tensor(4.218E+3)
         self.CPICE = torch.tensor(2.106E+3)
-        self.LSUBF = torch.tensor(3.335E+5)  # 融化潜热
+        self.LSUBF = torch.tensor(3.335E+5) 
         self.EMISSI_S = torch.tensor(0.95)
         self.CP = torch.tensor(7 * 287 / 2)
         self.R_D = torch.tensor(287)
@@ -468,7 +467,7 @@ class NoahLSMModule(nn.Module):
         self.EMISSI_S = torch.tensor(0.95)
         self.CP = torch.tensor(7 * 287 / 2)
         self.BARE = 19
-        self.TFREEZ = torch.tensor(273.15)  # 冰点温度
+        self.TFREEZ = torch.tensor(273.15) 
 
         gen_parameters = {
             'SBETA_DATA': tensor(-2.0),
@@ -1355,7 +1354,6 @@ class NoahLSMModule(nn.Module):
         delta[0] = (0 - self.ZSOIL[0]) / (0 - self.ZSOIL[1])
         delta[1:-1] = (self.ZSOIL[0:-2] - self.ZSOIL[1:-1]) / (self.ZSOIL[0:-2] - self.ZSOIL[2:])
         delta[-1] = (self.ZSOIL[-2] - self.ZSOIL[-1]) / (self.ZSOIL[-2] - (2 * self.ZBOT - self.ZSOIL[-1]))
-        # TU + TB - TU * delta
         return TU + (TB - TU) * delta
 
     def FRH2O_tensor(self, TKELV, SMC, SH2O, SMCMAX, BEXP, PSIS):
@@ -1985,7 +1983,6 @@ class NoahPy(nn.Module):
         self.RD = torch.tensor(287.04)
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # 构建 .pt 文件的绝对路径
         SFCDIFModule_path = os.path.join(current_dir, "SFCDIFModule.pt")
         NoahLSMModule_path = os.path.join(current_dir, "NoahLSMModule.pt")
         self.SFCDIFModule = torch.jit.load(SFCDIFModule_path)
@@ -2246,12 +2243,6 @@ class NoahPy(nn.Module):
 
         if trained_parameter is not None:
             self.NoahLSMModule.set_grad_soil_param(trained_parameter)
-        ##################################################################
-        # 依赖输入
-        # forcing_data, output_dir, forcing_filename, noahlsm_timestep
-        # SLDPTH, SHDMIN, SHDMAX, STYPE, TBOT, SLOPETYP, VEGTYP, sfcdif_option
-        # 初始场：ice, T1, STC, SMC, SH2O
-        #################################################################
 
         # CMC = tensor(0.0)
         # SNOWH = tensor(0.0)
@@ -2343,76 +2334,5 @@ class NoahPy(nn.Module):
         return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
 
 
-def interpolation(origin_position, target_position, data):
-    interpolated_values = []
-    for xi in target_position:
-        # 找到 xi 所在区间的左右端点索引
-        idx = torch.searchsorted(origin_position, xi) - 1
-        x0, x1 = origin_position[idx], origin_position[idx + 1]
-        y0, y1 = data[:, idx], data[:, idx + 1]
-        interpolated_value = y0 + (y1 - y0) * (xi - x0) / (x1 - x0)
-        interpolated_values.append(interpolated_value)
-    return torch.stack(interpolated_values, dim=1)
 
-
-def plot_noah_simulate():
-    observation_start_time = pd.to_datetime('2007-4-1')
-    observation_end_time = pd.to_datetime('2010-12-31')
-    """load 观测数据"""
-    TGL_VWC_GT = "E:\\Noah_LSM\\TGL\\\TGL_VWC_GT.csv"
-    TGL_VWC_GT_columns = ['5cmVWC', '10cmVWC', '40cmVWC', '105cmVWC', '245cmVWC']
-    TGL_VWC_GT = pd.read_csv(TGL_VWC_GT, header=0, index_col=0)
-    TGL_VWC_GT = TGL_VWC_GT[TGL_VWC_GT_columns]
-    TGL_VWC_GT.index = pd.to_datetime(TGL_VWC_GT.index)
-    observation_condition = (TGL_VWC_GT.index >= observation_start_time) & (
-            TGL_VWC_GT.index <= observation_end_time)
-    TGL_VWC_GT = TGL_VWC_GT[observation_condition]
-    Date = TGL_VWC_GT.index
-    TGL_VWC_GT = tensor(TGL_VWC_GT.to_numpy(dtype=float), dtype=torch.float32)
-    soil_depth = tensor(
-        [0.045, 0.091, 0.166, 0.289, 0.493, 0.829, 1.383, 2.296, 3.2, 4.2, 5.2, 6.2, 7.2, 8.2, 9.2, 11.2, 13.2,
-         15.2])
-
-    midpoint_each_soil_layer = tensor(
-        [0.022, 0.068, 0.1285, 0.2275, 0.391, 0.661, 1.106, 1.8395, 2.748, 3.7, 4.7, 5.7, 6.7, 7.7, 8.7, 10.2, 12.2,
-         14.2])
-    # midpoint_each_soil_layer = tensor(
-    #     [0.022, 0.068, 0.1285, 0.2275, 0.391, 0.661, 1.014, 1.45, 1.95, 2.45, 3.15, 4.1, 5.1, 6.6, 8.6, 10.6, 12.6,
-    #      14.6])
-    observation_depth = tensor([0.05, 0.1, 0.4, 1.05, 2.45])
-    mod_dir = "D:\\PyCharm Project\\NoahPy\\Noah_341_MODIFIED_TORCH\mod"
-    file_name = "D:\\PyCharm Project\\NoahPy\\Noah\\data\\forcing\\Origin_TGL_Noah_Forcing.txt"
-    # state_dict = torch.load('{}/{}'.format(mod_dir, "2024-07-08-14-41-30_0.7773_0.2227.pth"))
-    # Soil_Parameter.load_state_dict(state_dict)
-    model = NoahPy()
-    Noah_Date, STC, SH2O = model.noah_main(file_name)
-
-    data = interpolation(midpoint_each_soil_layer, observation_depth, SH2O).detach().numpy()
-    observation_condition = (Noah_Date >= observation_start_time) & (Noah_Date <= observation_end_time)
-    data = data[observation_condition]
-    # plot_timeseries(Date, ["Observation", "NoahPy"], data, TGL_VWC_GT.detach().numpy(),
-    #                 'Unfrozen water content',
-    #                 '$UWC(m^3/m^3$)', [0.05, 0.1, 0.4, 1.05, 2.45], y_lim=0.4)
-    # pass
-
-
-if __name__ == "__main__":
-    print(os.path.abspath(__file__))
-    # plot_noah_simulate()
-    # torch.jit.save(torch.jit.script(SFCDIFModule()), "SFCDIFModule.pt")
-    model = NoahPy()
-    # file_name = "H:\\Noah_LSM\Observation\site_all_process\grid_average_check\\37.85_101.15\\37.85_101.15_plant.txt"
-    file_name = "H:\\Noah_LSM\\Observation\site_all_process\grid_site_scale\\use\sourth\QOMS\\forcing_QOMS_plant.txt"
-    profiler = cProfile.Profile()
-    profiler.enable()  # 开始性能分析
-    # lstm_input_size = 10
-    # lstm_hidden_size = 128
-    # lstm_output_size = 3
-    # lstm_model = LSTM(lstm_input_size, lstm_hidden_size, lstm_output_size)
-    Date, STC, SH2O = model.noah_main(file_name, output_flag=False, lstm_model=None)
-    profiler.disable()  # 停止性能分析
-    stream = io.StringIO()
-    stats = pstats.Stats(profiler, stream=stream).sort_stats('cumulative')  # 按累计时间排序
-    stats.print_stats()
-    print(stream.getvalue())  # 打印性能分析结果
 
