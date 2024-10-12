@@ -1,5 +1,5 @@
 # NoahPy
-A new version of the backpropagation support for the land surface model
+A new version of the backpropagation support for the land surface model.The model is based on [Noah v3.4.1](https://ral.ucar.edu/model/unified-noah-lsm) and is recoded into a differentiable model using Pytorch.
 
 ## Main Process
 
