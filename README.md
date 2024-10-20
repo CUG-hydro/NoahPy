@@ -1,7 +1,7 @@
 # NoahPy
 A new version of the backpropagation support for the land surface model.The model is based on [Noah v3.4.1](https://ral.ucar.edu/model/unified-noah-lsm) and is recoded into a differentiable model using [Pytorch](https://pytorch.org/).
 
-## Main Process
+## Main Processes
 
 ![NoahLSM](https://github.com/user-attachments/assets/2d062cde-37a6-49e0-ad69-8dd7b2564081)
 
@@ -104,9 +104,11 @@ $$PX=D$$
 
 The linear equation system $PX=D$ can finally be solved using the differentiable method of the machine learning platform
 
-### RNN Architecture
+### RNN-wrapped main processes
 
 ![mainphysical](https://github.com/user-attachments/assets/28c3c349-2c61-4391-9713-3312ad2aeb9a)
+
+RNN-wrapped physical processes architecture, where $\vec{S_n}$ represents the state vector at the nth moment, $\vec{X_n}$ represents the meteorological driving variable at the nth moment, $\vec{\theta_p}$ represents the model parameter vector, and $\vec{O_n}$ represents the observation vector at the nth moment.
 
 
 
