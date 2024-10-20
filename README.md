@@ -108,7 +108,7 @@ The linear equation system $PX=D$ can finally be solved using the differentiable
 
 ![mainphysical](https://github.com/user-attachments/assets/28c3c349-2c61-4391-9713-3312ad2aeb9a)
 
-RNN-wrapped physical processes architecture, where $\vec{S_n}$ represents the state vector at the nth moment, $\vec{X_n}$ represents the meteorological driving variable at the nth moment, $\vec{\theta_p}$ represents the model parameter vector, and $\vec{O_n}$ represents the observation vector at the nth moment.
+RNN-wrapped physical processes architecture, where $\vec{S_n}$ represents the state vector at the nth moment, $\vec{X_n}$ represents the meteorological forcing vector at the nth moment, $\vec{\theta_p}$ represents the model parameter vector, and $\vec{O_n}$ represents the observation vector at the nth moment.
 
 
 
