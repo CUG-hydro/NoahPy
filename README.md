@@ -5,6 +5,12 @@ A new version of the backpropagation support for the land surface model.The mode
 
 ![NoahLSM](https://github.com/user-attachments/assets/2d062cde-37a6-49e0-ad69-8dd7b2564081)
 
+### RNN-wrapped main processes
+
+![mainphysical](https://github.com/user-attachments/assets/28c3c349-2c61-4391-9713-3312ad2aeb9a)
+
+RNN-wrapped physical processes architecture, where $\vec{S_n}$ represents the state vector at the nth moment, $\vec{X_n}$ represents the meteorological forcing vector at the nth moment, $\vec{\theta_p}$ represents the model parameter vector, and $\vec{O_n}$ represents the observation vector at the nth moment.
+
 ## Basic equation
 
 In the land surface process model, the two most core basic laws are the heat equation and the water equation, both of which are partial differential equations. Finite difference methods are often used to solve these equations, that is, they are ultimately converted into a system of equations. Therefore, the differentiable solution method of machine learning platforms (such as Pytorch and TensorFlow) can be used to enable the model to propagate gradients.
@@ -104,11 +110,7 @@ $$PX=D$$
 
 The linear equation system $PX=D$ can finally be solved using the differentiable method of the machine learning platform
 
-### RNN-wrapped main processes
 
-![mainphysical](https://github.com/user-attachments/assets/28c3c349-2c61-4391-9713-3312ad2aeb9a)
-
-RNN-wrapped physical processes architecture, where $\vec{S_n}$ represents the state vector at the nth moment, $\vec{X_n}$ represents the meteorological forcing vector at the nth moment, $\vec{\theta_p}$ represents the model parameter vector, and $\vec{O_n}$ represents the observation vector at the nth moment.
 
 
 
