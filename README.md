@@ -1,5 +1,5 @@
 # NoahPy
-A new version of the backpropagation support for the land surface model.The model is based on [Noah v3.4.1](https://ral.ucar.edu/model/unified-noah-lsm) and is recoded into a differentiable model using Pytorch.
+A new version of the backpropagation support for the land surface model.The model is based on [Noah v3.4.1](https://ral.ucar.edu/model/unified-noah-lsm) and is recoded into a differentiable model using [Pytorch](https://pytorch.org/).
 
 ## Main Process
 
@@ -9,12 +9,36 @@ A new version of the backpropagation support for the land surface model.The mode
 
 In the land surface process model, the two most core basic laws are the heat equation and the water equation, both of which are partial differential equations. Finite difference methods are often used to solve these equations, that is, they are ultimately converted into a system of equations. Therefore, the differentiable solution method of machine learning platforms (such as Pytorch and TensorFlow) can be used to enable the model to propagate gradients.
 
-### Heat equation
+### (1) Heat equation
 $$\frac{\partial}{\partial t }\rho C_p T=\frac{\partial}{\partial z}[\frac{\partial K T}{\partial z}]+Q$$
 
-### Richards equation 
+where $T_s$ represents the soil temperature; $C_s$ represents the heat capacity of the soil, $λ$ is the heat conduction of the soil, where the calculation process of the $C_s$ is as follows:
+```math
+C_s=\theta C_w+\left(1-\theta_s\right)C_{soil}+\left(\theta_s-\theta\right)C_{air}
+```
 
-$$\frac{\partial \theta}{\partial t} =\frac{\partial }{\partial z}[D(\theta)\frac{\partial \theta}{\partial z}] +\frac{\partial K(\theta)}{\partial z}+S$$
+where: $θ$ represents the soil water content; $s$ indicates the porosity of the soil; $C_{w}$, $C_{soil}$, and $C_{air}$ represent the heat capacity of water, soil substrate, and air, respectively.
+Calculation formula for soil heat conduction (λ):
+```math
+\lambda\left(\theta\right)=K_e\left(\lambda_{sat\ }-\lambda_{dry}\right)+\lambda_{dry}
+```
+
+where $K_e$ is Kersten, $λ_{sat}$ is the heat of the saturated soil, and $λ_{dry}$ is the thermal conductivity of the dry soil.
+
+### (2) Richards equation 
+In the land surface process model, the exchange and allocation of water is crucial, which involves the balance of energy and water, and has an important impact on the soil layers. This process plays a key role in simulating characteristics such as permafrost and underground ice, as well as ecological processes such as vegetation growth and transpiration.NoahPy is described by the Richards equation for soil water movement, and its formula is as follows:
+```math
+\frac{\partial \theta}{\partial t} =\frac{\partial }{\partial z}[D(\theta)\frac{\partial \theta}{\partial z}] +\frac{\partial K(\theta)}{\partial z}+S
+```
+where: $θ$ represents the water content of the soil; $t$ stands for time; $D$ is the soil moisture diffusivity; $K$ is the conductivity of soil water, $z$ is the depth of soil; $S$ represents soil water sources and sinks (e.g., precipitation, evapotranspiration, and runoff). In this formula, the first term to the right of the equal sign represents the part of soil moisture diffusion that receives the gradient of the soil vertical water potential $Ψ$, while the second term on the right side of the equation indicates that the ground is the part of soil moisture conduction caused by gravity.
+In NoahPy, the soil water conductivity $K$ and soil matrix potential $Ψ$ are calculated using the Clapp-Hornberger parameterization scheme, which is:
+```math
+\begin{align}
+K\left(\theta\right)=K_s\left(\theta/\theta_s\right)^{2b+3} \\\\\
+\Psi\left(\theta\right)=\Psi_s\left(\theta/\theta_s\right)^{-b}
+\end{align}
+```
+where: $\Psi_s$ is the water potential of the saturated soil; $K_s$ and $\theta_s$ were saturated soil water conductivity and soil porosity, respectively. $b$ is an empirical parameter that relates to the pore size distribution of the soil matrix.
 
 ---
 ### Finite Difference Discretization
@@ -79,6 +103,10 @@ Using matrix representation:
 $$PX=D$$
 
 The linear equation system $PX=D$ can finally be solved using the differentiable method of the machine learning platform
+
+### RNN Architecture
+
+![mainphysical](https://github.com/user-attachments/assets/28c3c349-2c61-4391-9713-3312ad2aeb9a)
 
 
 
