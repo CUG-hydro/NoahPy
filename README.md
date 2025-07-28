@@ -1,5 +1,54 @@
 # NoahPy
-A new version of the backpropagation support for the land surface model.The model is based on [Noah v3.4.1](https://ral.ucar.edu/model/unified-noah-lsm) and is recoded into a differentiable model using [Pytorch](https://pytorch.org/).
+A new version of the backpropagation support for the land surface model.The model is based on [Noah v3.4.1](https://ral.ucar.edu/model/unified-noah-lsm) and is recoded into a differentiable model using [Pytorch](https://pytorch.org/), with several improvements made to the representation of physical processes. Detailed descriptions of these enhancements and their applications in simulating permafrost distribution and thermal–hydrological can be found in the following references:
+
+- Wu X, Nan Z, Zhao S, et al. Spatial modeling of permafrost distribution and properties on the Qinghai‐Tibet Plateau. Permafrost and Periglacial Processes, 2018, 29(2): 86–99. https://doi.org/10.1002/ppp.1971
+
+- Chen H, Nan Z, Zhao L, et al. Noah modelling of the permafrost distribution and characteristics in the West Kunlun Area, Qinghai‐Tibet Plateau, China. Permafrost and Periglacial Processes, 2015, 26(2): 160–174. https://doi.org/10.1002/ppp.1841
+
+## Code Structure
+
+This folder contains the source code for NoahPy. The parameter_new directory stores the required lookup tables, including those for soil parameters and other preprocessed input data.
+
+Two versions of the NoahPy code are included:
+
+- NoahPy.py: A procedural implementation where all functions are written independently.
+
+- NoahPy_module.py: An object-oriented implementation that encapsulates functions within classes. This version is generally more efficient in terms of execution performance.
+
+Both versions implement the same core processes and are interchangeable for use.
+
+
+## Usage
+Depending on the version you choose, the usage differs slightly:
+### Using NoahPy_module (object-oriented version)
+```python
+from NoahPy_module import NoahPy
+model = NoahPy()
+Date, STC, SH2O = model.noah_main(file_name, output_flag=False, lstm_model=None)
+```
+- file_name: Path to the input file.
+- output_flag: If True, results will be written to a file. Default is False.
+- lstm_model: Optional argument for coupling with an LSTM model; set to None if not used.
+
+### Using NoahPy.py (procedural version)
+```python
+from NoahPy import noah_main
+Date, STC, SH2O = noah_main(file_name, output_flag=False, lstm_model=None)
+```
+The input parameters and output format are the same as in the object-oriented version.
+
+### Input Requirements
+- The input forcing file format should follow the structure used in the original Noah LSM.
+Please refer to the provided **forcing.txt** file for an example.
+
+- The parameter_new folder contains required model lookup tables:
+
+	- VEGPARM.TBL: Vegetation parameter table
+
+	- SOILPARM.TBL: Soil parameter table
+
+- The general model parameters (formerly from GENPARM.TBL) have been hardcoded into the model for simplicity.
+You may modify these directly in the source code if needed.
 
 ## Main Processes
 
