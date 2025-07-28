@@ -4,12 +4,32 @@
 @Author  ：tianwb
 @Date    ：2024/5/14 18:08
 
+@Description：
+This module provides a PyTorch-based differentiable implementation of the Noah LSM (Land Surface Model),
+enabling gradient-based optimization and backpropagation support. It is designed for integration with 
+physics-informed machine learning frameworks and research on land surface processes.
 This version is based on Noah 3.4.1, and some of the physical processes have been improved,
 see Wu X, Nan Z, Zhao S, et al. Spatial modeling of permafrost distribution and properties on
 the Qinghai‐Tibet Plateau[J]. Permafrost and Periglacial Processes, 2018, 29(2): 86-99. doi: 10.1002/ppp.1971.
 Chen H, Nan Z, Zhao L, et al. Noah Modelling of the Permafrost Distribution and Characteristics in
 the West Kunlun Area, Qinghai‐Tibet Plateau, China[J]. Permafrost and Periglacial Processes, 2015, 26(2): 160-174. doi: 10.1002/ppp.1841.
 
+
+@License：
+Copyright (c) 2025 Tian Wenbiao
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
+the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
+to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions 
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
+THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 '''
 import cProfile
 import io
