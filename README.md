@@ -108,9 +108,9 @@ K\left(\theta\right)=K_s\left(\theta/\theta_s\right)^{2b+3} \\\\\
 where: $\Psi_s$ is the water potential of saturated soil; $K_s$ and $\theta_s$ are saturated soil water conductivity and soil porosity, respectively. $b$ is an empirical parameter that relates to the pore size distribution of soil matrix.
 
 ---
-### Finite Difference Discretization
+## Finite Difference Discretization
 
-#### Soil discrete schematic diagram
+### Soil discrete schematic diagram
 ![Soil discrete schematic diagram](https://github.com/user-attachments/assets/cfb240a1-f0d3-4923-8242-e5cc1b93b072)
 - Pan H L, Mahrt L. Interaction between soil hydrology and boundary-layer development[J]. Boundary-Layer Meteorology, 1987, 38(1-2): 185-202. [doi: 10.1007/BF00121563](https://link.springer.com/article/10.1007/BF00121563).
 - Kalnay E, Kanamitsu M. Time Schemes for Strongly Nonlinear Damping Equations[J]. Monthly Weather Review, 1988, 116(10): 1945-1958. [doi: 10.1175/1520-0493(1988)116<1945:TSFSND>2.0.CO;2](https://journals.ametsoc.org/view/journals/mwre/116/10/1520-0493_1988_116_1945_tsfsnd_2_0_co_2.xml).
