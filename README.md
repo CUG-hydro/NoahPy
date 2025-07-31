@@ -13,7 +13,7 @@ A technical documentation, including a brief introduction to the theoretical bas
 >
 > Web: [https://permalab.science](https://permalab.science)
 > 
-> Citation: Tian, W. & Nan, Z. (2025). wbtian/NoahPy: NoahPy v1.0.0 – Initial Release. Zenodo. [https://doi.org/10.5281/zenodo.16531046](https://doi.org/10.5281/zenodo.16531046)
+> Citation: Tian, W. & Nan, Z. (2025). wbtian/NoahPy: NoahPy v1.0.0 – Initial Release. Zenodo. [https://doi.org/10.5281/zenodo.16530326](https://doi.org/10.5281/zenodo.16530326)
 
 July 31, 2025
 
