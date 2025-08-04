@@ -41,11 +41,10 @@ from datetime import datetime
 
 from matplotlib import pyplot as plt
 
-import utils
+
 from Module_sf_noahlsm import *
 from Module_sfcdif_wrf import *
 from plot_simulate import plot_timeseries
-from utils import calculate_nse, NSELoss
 
 
 class LSTM(nn.Module):
@@ -466,6 +465,7 @@ def noah_main(file_name, trained_parameter=None, lstm_model=None, output_flag=Fa
         """output"""
         out_STC.append(STC - 273.15)
         out_SH2O.append(SH2O)
+        out_SMC.append(SMC)
 
         # CMC, T1, STC, SMC, SH2O,
         # SNOWH, SNEQV,SNOTIME1,
@@ -481,47 +481,8 @@ def noah_main(file_name, trained_parameter=None, lstm_model=None, output_flag=Fa
         if k_time % 365 == 0:
             print(nowdate)
 
-        # data = torch.stack(out_SH2O)
-        # optimizer.zero_grad()
-        # loss = F.mse_loss(data, torch.rand(data.size()))
-        # loss.backward()
-        # plot_loss()
-        # for item in grads:
-        #     if torch.isnan(grads[item]).any():
-        #         print(item)
-        #         print(grads[item])
-        # if torch.isnan(grad_soil_parameter.soilParam_withGrad.grad).any():
-        #     print("nan gradient detected")
-
-        # if k_time >= 1:
-        #     dot = make_dot(SH2O, params=dict(grad_soil_parameter.named_parameters()), show_attrs=True, show_saved=False)
-        #     dot.render('graph-output/forward-graph', format='pdf', view=True)
-        #     optimizer.zero_grad()
-        #     data = torch.stack(out_SH2O)
-        #     loss = F.mse_loss(data, torch.rand(data.size()))
-        #     loss.backward(retain_graph=True)
-        #     dot = make_dot(loss, params=dict(grad_soil_parameter.named_parameters()), show_attrs=False, show_saved=True)
-        #     dot.render('graph-output/backward_graph', format='pdf', view=True)
-        #     break
-
-    # # dot.graph_attr.update(size="500,500!")
-    # dot.node_attr.update({
-    #     # 'shape': 'ellipse',
-    #     'shape': 'box',
-    #     'style': 'filled',
-    #     'fillcolor': 'lightgreen',
-    #     'color': 'red',
-    #     'fontcolor': 'blue',
-    #     'fontsize': '12',
-    #     'fontname': 'Helvetica',
-    #     'height': '0.5',
-    #     'width': '0.5',
-    #     'label': 'Custom Node'
-    # })
-    # dot.graph_attr.update(size="100,100!")  # 调整图像大小
-    # dot.graph_attr.update(dpi="600")  # 增加图像分辨率
-
     """output"""
+    condition = (Date >= startdate) & (Date <= enddate)
     if output_flag:
         SH2O_columns = [f'SH2O({i + 1})' for i in range(NSOIL)]
         STC_columns = [f'STC({i + 1})' for i in range(NSOIL)]
@@ -543,71 +504,12 @@ def noah_main(file_name, trained_parameter=None, lstm_model=None, output_flag=Fa
                          # torch.stack(out_SSOIL).reshape(-1, 1),
                          ], dim=1)
         pd.DataFrame(out.detach().numpy(), columns=out_columns,
-                     index=Date[:k_time]).to_csv(os.path.join(output_dir, "NoahPy_output.txt"), index=True, sep=' ')
-    condition = (Date >= startdate) & (Date <= enddate)
+                     index=Date[condition]).to_csv(os.path.join(output_dir, "NoahPy_output.txt"), index=True)
     return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
 
 
-def call_noah():
-    """根据扰动的参数数据集运行Noah"""
-    Noah_working_directory = "D:\PyCharm Project\\NoahPy\\Noah\\Noah_341_MODIFIED"
-    Noah_exe_path = "D:\PyCharm Project\\NoahPy\\Noah\\Noah_341_MODIFIED\\driver.exe"
-    # soil_param_path = "./SOILPARM.TBL"
-    args = ['D:\PyCharm Project\\NoahPy\\Noah\data\\forcing\TGL_Noah_Forcing.txt', 'Noah_output.txt']
-    subprocess.run([Noah_exe_path] + args, cwd=Noah_working_directory)
 
 
-def interpolation(origin_position, target_position, data):
-    interpolated_values = []
-    for xi in target_position:
-        idx = torch.searchsorted(origin_position, xi) - 1
-        x0, x1 = origin_position[idx], origin_position[idx + 1]
-        y0, y1 = data[:, idx], data[:, idx + 1]
-        interpolated_value = y0 + (y1 - y0) * (xi - x0) / (x1 - x0)
-        interpolated_values.append(interpolated_value)
-    return torch.stack(interpolated_values, dim=1)
-
-
-def plot_grad():
-    SH2O_New_mean = list()
-    SH2OOUT_mean = list()
-    P_mean = list()
-    RHSTT_mean = list()
-    CI_mean = list()
-    BI_mean = list()
-    AI_mean = list()
-    for key, value in grads.items():
-        if key.__contains__('SH2O_New'):
-            print(f"{key}: {value}")
-            SH2O_New_mean.insert(0, torch.mean(value))
-        if key.__contains__('SH2OOUT'):
-            print(f"{key}: {value}")
-            SH2OOUT_mean.insert(0, torch.mean(value))
-        if key.__contains__('RHSTT'):
-            print(f"{key}: {value}")
-            RHSTT_mean.insert(0, torch.mean(value))
-        if key.__contains__('P'):
-            print(f"{key}: {value}")
-            P_mean.insert(0, torch.mean(value))
-        if key.__contains__('CI'):
-            print(f"{key}: {value}")
-            CI_mean.insert(0, torch.mean(value))
-        if key.__contains__('AI'):
-            print(f"{key}: {value}")
-            AI_mean.insert(0, torch.mean(value))
-        if key.__contains__('BI'):
-            print(f"{key}: {value}")
-            BI_mean.insert(0, torch.mean(value))
-    plt.plot(SH2O_New_mean, label='SH2O_New_mean')
-    plt.plot(SH2OOUT_mean, label='SH2OOUT_mean')
-    plt.plot(RHSTT_mean, label='RHSTT_mean')
-    plt.plot(P_mean, label='P_mean')
-    plt.plot(CI_mean, label='CI_mean')
-    plt.plot(AI_mean, label='AI_mean')
-    plt.plot(BI_mean, label='BI_mean')
-    plt.ylim(-100, 100)
-    plt.legend()
-    plt.show()
 
 
 
