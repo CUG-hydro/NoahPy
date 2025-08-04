@@ -47,53 +47,6 @@ from Module_sfcdif_wrf import *
 from plot_simulate import plot_timeseries
 
 
-class LSTM(nn.Module):
-    def __init__(self, num_inputs, hidden_size, output_size, dropout=0.2, bias=False):
-        super(LSTM, self).__init__()
-        self.lstm_cell = nn.LSTMCell(num_inputs, hidden_size)
-        self.reg = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.Tanh(),
-            nn.Linear(hidden_size, output_size),
-        )
-        intput_variable = ['windspeed', 'temperature', 'humidity', 'pressure', 'shortwave', 'longwave', 'precipitation',
-                           'NDVI', 'LAI', 'ETP']
-        output_variable = ['EDIR', 'EC', 'ETT']
-        plant_variable = {
-            'LAI': {'mean': 0, 'scale': 1},
-            'NDVI': {'mean': 0, 'scale': 0.1}
-        }
-        with open("StandardScaler/forcing_scaler.pkl", 'rb') as f:
-            norm_pickle = pickle.load(f)
-            means = norm_pickle.mean_
-            scales = norm_pickle.scale_
-            columns = norm_pickle.feature_names_in_
-            forcing_stats = {name: {'mean': mean, 'scale': scale} for name, mean, scale in zip(columns, means, scales)}
-        with open("StandardScaler/simulate_data.pkl", 'rb') as f:
-            denorm_pickle = pickle.load(f)
-            means = denorm_pickle.mean_
-            scales = denorm_pickle.scale_
-            columns = denorm_pickle.feature_names_in_
-            simulate_stats = {name: {'mean': mean, 'scale': scale} for name, mean, scale in zip(columns, means, scales)}
-        states = pd.DataFrame({**forcing_stats, **simulate_stats, **plant_variable}).T
-        self.input_mean = torch.tensor(states.loc[intput_variable, 'mean'].values, dtype=torch.float32)
-        self.intput_std = torch.tensor(states.loc[intput_variable, 'scale'].values, dtype=torch.float32)
-        self.output_mean = torch.tensor(states.loc[output_variable, 'mean'].values, dtype=torch.float32)
-        self.output_std = torch.tensor(states.loc[output_variable, 'scale'].values, dtype=torch.float32)
-        self.hx = None
-        self.cx = None
-
-    def forward(self, x, hc=None):
-        x_normalized = (x - self.input_mean) / self.intput_std
-        if hc is None:
-            hx, cx = self.lstm_cell(x_normalized)
-        else:
-            hx, cx = self.lstm_cell(x_normalized, hc)
-        output = self.reg(hx)
-        output = output * self.output_std + self.output_mean
-        return output, (hx, cx)
-
-
 def open_forcing_file(forcing_file_path):
     """
     open forcing file and Initialize the state variable
@@ -506,6 +459,7 @@ def noah_main(file_name, trained_parameter=None, lstm_model=None, output_flag=Fa
         pd.DataFrame(out.detach().numpy(), columns=out_columns,
                      index=Date[condition]).to_csv(os.path.join(output_dir, "NoahPy_output.txt"), index=True)
     return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
+
 
 
 
