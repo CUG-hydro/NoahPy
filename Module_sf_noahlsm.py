@@ -436,7 +436,7 @@ def TRANSP(STYPE, ETP1, SMC, CMC, SHDFAC, CMCMAX, PC, CFACTR, NROOT: int,
     return ET
 
 
-@torch.jit.script
+
 def EVAPO(SMC, CMC, ETP1, DT, SH2O, SMCMAX, PC, STYPE, SHDFAC, CMCMAX,
           SMCDRY, CFACTR, NROOT: int, RTDIS, FXEXP):
     """
@@ -1592,24 +1592,6 @@ def SNOPAC(STYPE, ETP, PRCP, PRCPF, SNOWNG, SMC, SMCMAX, SMCDRY, CMC, CMCMAX, DT
     T12A = ((FDOWN - FLX1 - FLX2 - EMISSI * SIGMA * T24) / RCH + TH2 - SFCTMP - ETANRG / RCH) / RR
     T12B = DF1 * STC[0] / (DTOT * RR * RCH)
     T12 = (SFCTMP + T12A + T12B) / DENOM
-    ###################################################
-    # condition_1 = torch.le(T12, TFREEZ)
-    # condition_2 = torch.le(ESD - ESNOW2, ESDMIN)
-    # T1 = torch.where(condition_1, T12, TFREEZ * SNCOVR ** SNOEXP + T12 * (1.0 - SNCOVR ** SNOEXP))
-    # SSOIL = torch.where(condition_1, DF1 * (T1 - STC[0]) / DTOT, DF1 * (T1 - STC[0]) / DTOT)
-    # ESD = torch.where(condition_1, torch.max(tensor(0.0), ESD - ESNOW2),
-    #                   torch.where(condition_2, tensor(0.0), ESD))
-    # # SEH = RCH * (T1 - TH2)
-    # # T14 = torch.pow(T1, 4)
-    # FLX3 = torch.where(condition_1, tensor(0.0), torch.where(condition_2, tensor(0.0), torch.clamp(
-    #     FDOWN - FLX1 - FLX2 - EMISSI * SIGMA * torch.pow(T1, 4) - SSOIL - RCH * (T1 - TH2) - ETANRG, min=0.0)))
-    # EX = torch.where(condition_1, tensor(0.0), torch.where(condition_2, tensor(0.0), FLX3 * 0.001 / LSUBF))
-    # SNOMLT = torch.where(condition_1, tensor(0.0), torch.where(condition_2, tensor(0.0), EX * DT))
-    # ESD = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), ESD - SNOMLT, tensor(0.0))
-    # EX = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), EX, ESD / DT)
-    # FLX3 = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), FLX3, EX * 1000.0 * LSUBF)
-    # SNOMLT = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), SNOMLT, ESD)
-    # PRCP1 = torch.where(condition_1, PRCP1, PRCP1 + EX)
     if T12 <= TFREEZ:
         T1 = T12
         SSOIL = DF1 * (T1 - STC[0]) / DTOT
@@ -1662,8 +1644,3 @@ def SNOPAC(STYPE, ETP, PRCP, PRCPF, SNOWNG, SMC, SMCMAX, SMCDRY, CMC, CMCMAX, DT
         SSOIL,
         SNOMLT, CMC, BETA, ESD, SNOWH, SNCOVR, SNDENS, T1)
 
-
-if __name__ == '__main__':
-    # print(HRT_traced.code)
-    fun = torch.compile(NOPAC)
-    print(fun)
