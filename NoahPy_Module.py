@@ -26,15 +26,20 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 '''
 import cProfile
 import io
+import sys
 import os
+import platform
 import pstats
 from datetime import datetime
+
 from typing import Tuple
 
 import numpy as np
 import pandas as pd
+import psutil
 import torch
 from torch import nn, tensor, Tensor
+import tracemalloc
 # from .plot_simulate import plot_timeseries
 
 
@@ -42,15 +47,15 @@ class ConstantsModule(nn.Module):
     def __init__(self):
         super(ConstantsModule, self).__init__()
         self.EPSILON = torch.tensor(1.0e-15)
-        self.TFREEZ = torch.tensor(273.15) 
+        self.TFREEZ = torch.tensor(273.15)  
         self.LVH2O = torch.tensor(2.501e6)  
-        self.LSUBS = torch.tensor(2.83e6) 
+        self.LSUBS = torch.tensor(2.83e6)  
         self.R = torch.tensor(287.04)  
         self.RD = torch.tensor(287.04)
         self.SIGMA = torch.tensor(5.67E-8)
         self.CPH2O = torch.tensor(4.218E+3)
         self.CPICE = torch.tensor(2.106E+3)
-        self.LSUBF = torch.tensor(3.335E+5) 
+        self.LSUBF = torch.tensor(3.335E+5)  
         self.EMISSI_S = torch.tensor(0.95)
         self.CP = torch.tensor(7 * 287 / 2)
         self.R_D = torch.tensor(287)
@@ -472,6 +477,8 @@ class NoahLSMModule(nn.Module):
                  RDLAI2D=False, USEMONALB=False, grad_soil_param=None):
         super().__init__()
         self.k_time = 0
+
+
         self.OPT_FRZ = 1
         self.file_name = file_name
         # options for frozen soil permeability
@@ -487,7 +494,7 @@ class NoahLSMModule(nn.Module):
         self.EMISSI_S = torch.tensor(0.95)
         self.CP = torch.tensor(7 * 287 / 2)
         self.BARE = 19
-        self.TFREEZ = torch.tensor(273.15) 
+        self.TFREEZ = torch.tensor(273.15)  
 
         gen_parameters = {
             'SBETA_DATA': tensor(-2.0),
@@ -510,10 +517,6 @@ class NoahLSMModule(nn.Module):
             'NATURAL': tensor(5),
             'SLOPE_DATA': tensor([0.1, 0.6, 1.0, 0.35, 0.55, 0.8, 0.63, 0.0, 0.0])
         }
-        # SFCDIFModule_path = os.path.join(current_dir, "SFCDIFModule.pt")
-        # NoahLSMModule_path = os.path.join(current_dir, "NoahLSMModule.pt")
-        # self.SFCDIFModule = torch.jit.load(SFCDIFModule_path)
-        # self.NoahLSMModule = torch.jit.load(NoahLSMModule_path)
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
         veg_param_path = os.path.join(current_dir, "parameter_new/VEGPARM.TBL")
@@ -865,7 +868,7 @@ class NoahLSMModule(nn.Module):
             SNOTIME1 = tensor(0.0)
         else:
             SNCOVR = self.SNFRAC(SNEQV, self.SNUP, self.SALP)
-            SNCOVR = torch.clamp(SNCOVR, min=0.0, max=1.0)
+            SNCOVR = torch.clamp(SNCOVR, min=0.0, max=0.98)  ########### modified 2024.10.29
             ALBEDO, EMISSI, SNOTIME1 = self.ALCALC(ALB, SNOALB, EMBRD, SNCOVR, SNOWNG, SNOTIME1)
             DF1 = torch.where(torch.gt(SNCOVR, 0.97), SNCOND, DF1 * torch.exp(self.SBETA * SHDFAC))
             DTOT = SNOWH + DSOIL
@@ -911,25 +914,6 @@ class NoahLSMModule(nn.Module):
                 SH2O, SNOWH.detach(), SNEQV.detach(), SNOTIME1.detach(), ALBEDO.detach(),
                 PC.detach(), Q1.detach(), Z0.detach(), Z0BRD.detach(), EMISSI.detach())
 
-    # def EVAPO_LSTM(lstm_input, ETP1, NSOIL, NROOT, SMC, RTDIS, STYPE):
-    #     global hc
-    #     condition1 = ETP1 > 0.0
-    #     condition2 = SHDFAC < 1.0
-    #     condition3 = SHDFAC > 0.0
-    #     condition4 = CMC > 0.0
-    #     lstm_input = torch.cat(lstm_input, ETP1)
-    #     out, hc = lstm_model(lstm_input, hc)  # out: 'EDIR', 'EC', 'ETT'
-    #     EDIR, EC, ETT = out  # 将lstm模型输出为分解为三个变量，分别为表层蒸发，冠层蒸发以及植被蒸散发
-    #     ET = torch.zeros(NSOIL)
-    #     PSISAT, BEXP, DKSAT, DWSAT, SMCMAX, SMCWLT, SMCREF, SMCDRY, F1, QUARTZ = REDSTP(STYPE[:NROOT], list(range(NROOT)))
-    #     GX = torch.clamp((SMC[:NROOT] - SMCWLT) / (SMCREF - SMCWLT), min=0.0, max=1.0)
-    #     SGX = torch.sum(GX)
-    #     SGX = SGX / NROOT
-    #     RTX = RTDIS[:NROOT] + GX[:NROOT] - SGX
-    #     GX = GX * torch.clamp(RTX, min=0.0)
-    #     DENOM = torch.sum(GX)
-    #     ET[:NROOT] = ETT * GX / DENOM
-    #     return ETA, EDIR, ETT, EC, ET
 
     def DEVAP(self, ETP1, SMC, SHDFAC) -> Tensor:
         """
@@ -1148,12 +1132,18 @@ class NoahLSMModule(nn.Module):
                     0)
             SH2OOUT = torch.clamp(SH2O + P + WPLUS[:-1] / self.DENOM2, min=tensor(0.0), max=SMCMAX - SICE)
             SMC = torch.clamp(SH2O + P + WPLUS[:-1] / self.DENOM2 + SICE, tensor(0.02), SMCMAX)
+            # SMC = torch.clamp(SH2OIN + P + WPLUS[:-1] / DDZ + SICE, tensor(0.02), SMCMAX)
+            # SH2OOUT = torch.max(tensor(0.0), SMC - SICE) ############ modified 2024.10.29
             RUNOFF3 = WPLUS[-1]
         else:
             SH2OOUT = torch.clamp(SH2O + P, min=tensor(0.0), max=SMCMAX - SICE)
             SMC = torch.clamp(SH2O + P + SICE, tensor(0.02), SMCMAX)
+            # SMC = torch.clamp(SH2OIN + P + SICE, tensor(0.02), SMCMAX)
+            # SH2OOUT = torch.max(tensor(0.0), SMC - SICE) ############ modified 2024.10.29
             RUNOFF3 = tensor(0.0)
         ##########################
+
+        # update CMC
         CMC = CMC + self.DT * RHSCT
         CMC = torch.where(CMC < 1E-20, tensor(0.0), CMC)
         CMC = torch.clamp(CMC, tensor(0.0), self.CMCMAX)
@@ -1374,6 +1364,7 @@ class NoahLSMModule(nn.Module):
         delta[0] = (0 - self.ZSOIL[0]) / (0 - self.ZSOIL[1])
         delta[1:-1] = (self.ZSOIL[0:-2] - self.ZSOIL[1:-1]) / (self.ZSOIL[0:-2] - self.ZSOIL[2:])
         delta[-1] = (self.ZSOIL[-2] - self.ZSOIL[-1]) / (self.ZSOIL[-2] - (2 * self.ZBOT - self.ZSOIL[-1]))
+        # TU + TB - TU * delta
         return TU + (TB - TU) * delta
 
     def FRH2O_tensor(self, TKELV, SMC, SH2O, SMCMAX, BEXP, PSIS):
@@ -1489,7 +1480,7 @@ class NoahLSMModule(nn.Module):
         DSX = SNDENS * PEXP
         DSX = torch.clamp(DSX, min=0.05, max=0.4)
         SNDENS = torch.where(torch.ge(TSNOWC, 0),
-                             torch.clamp(SNDENS * (1. - 0.13 * DTHR / 24.) + 0.13 * DTHR / 24., max=0.04), DSX)
+                             torch.clamp(SNDENS * (1. - 0.13 * DTHR / 24.) + 0.13 * DTHR / 24., max=0.4), DSX) ### modified 2024.10.30
         SNOWHC = ESDC / SNDENS
         SNOWH = SNOWHC * 0.01
         return SNOWH, SNDENS
@@ -1879,17 +1870,6 @@ class NoahLSMModule(nn.Module):
         ETNS = tensor(0.0)
         ESNOW = tensor(0.0)
 
-        # condition = torch.le(ETP, 0)
-        # ETP = torch.where(condition & torch.ge(RIBB, 1) & torch.gt(FDOWN, 150.0),
-        #                   (torch.min(ETP * (1.0 - RIBB), tensor(0.0)) * SNCOVR / 0.980 + ETP * (0.980 - SNCOVR)) / 0.980,
-        #                   ETP)
-        # ETP1 = ETP * 0.001
-        # DEW = torch.where(condition, -ETP1, tensor(0.0))
-        # ETNS1, EDIR, ETT, EC1, ET1 = EVAPO(SMC, CMC, ETP1, DT, SH2O, SMCMAX, PC, STYPE, SHDFAC,
-        #                                    CMCMAX,
-        #                                    SMCDRY, CFACTR, NROOT, RTDIS, FXEXP)
-        # ESNOW2 = torch.where(condition, ETP1 * DT, ETP * SNCOVR * 0.001 * DT)
-        # ETANRG = torch.where(condition, ETP * ((1. - SNCOVR) * LSUBC + SNCOVR * LSUBS), ESNOW * LSUBS + ETNS * LSUBC)
         if ETP <= 0:
             if RIBB >= 0.1 and FDOWN > 150.0:
                 ETP = (torch.min(ETP * (1.0 - RIBB), tensor(0.0)) * SNCOVR / 0.980 + ETP * (0.980 - SNCOVR)) / 0.980
@@ -1925,23 +1905,7 @@ class NoahLSMModule(nn.Module):
         T12B = DF1 * STC[0] / (DTOT * RR * RCH)
         T12 = (SFCTMP + T12A + T12B) / DENOM
         ###################################################
-        # condition_1 = torch.le(T12, TFREEZ)
-        # condition_2 = torch.le(ESD - ESNOW2, ESDMIN)
-        # T1 = torch.where(condition_1, T12, TFREEZ * SNCOVR ** SNOEXP + T12 * (1.0 - SNCOVR ** SNOEXP))
-        # SSOIL = torch.where(condition_1, DF1 * (T1 - STC[0]) / DTOT, DF1 * (T1 - STC[0]) / DTOT)
-        # ESD = torch.where(condition_1, torch.max(tensor(0.0), ESD - ESNOW2),
-        #                   torch.where(condition_2, tensor(0.0), ESD))
-        # # SEH = RCH * (T1 - TH2)
-        # # T14 = torch.pow(T1, 4)
-        # FLX3 = torch.where(condition_1, tensor(0.0), torch.where(condition_2, tensor(0.0), torch.clamp(
-        #     FDOWN - FLX1 - FLX2 - EMISSI * SIGMA * torch.pow(T1, 4) - SSOIL - RCH * (T1 - TH2) - ETANRG, min=0.0)))
-        # EX = torch.where(condition_1, tensor(0.0), torch.where(condition_2, tensor(0.0), FLX3 * 0.001 / LSUBF))
-        # SNOMLT = torch.where(condition_1, tensor(0.0), torch.where(condition_2, tensor(0.0), EX * DT))
-        # ESD = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), ESD - SNOMLT, tensor(0.0))
-        # EX = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), EX, ESD / DT)
-        # FLX3 = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), FLX3, EX * 1000.0 * LSUBF)
-        # SNOMLT = torch.where(torch.ge(ESD - SNOMLT, ESDMIN), SNOMLT, ESD)
-        # PRCP1 = torch.where(condition_1, PRCP1, PRCP1 + EX)
+
         if T12 <= TFREEZ:
             T1 = T12
             SSOIL = DF1 * (T1 - STC[0]) / DTOT
@@ -1978,8 +1942,8 @@ class NoahLSMModule(nn.Module):
                                                                      EC1, ET1)
         ZZ1 = tensor(1.0)
         YY = STC[0] - 0.5 * SSOIL * self.ZSOIL[0] * ZZ1 / DF1
-        # T11 = T1
-        STC, T1, SSOIL, SH2O = self.SHFLX(STC, SMC, YY, ZZ1, SH2O, DF1)
+        # T11 = T1 ### modified 2024.10.29
+        STC, T11, SSOIL, SH2O = self.SHFLX(STC, SMC, YY, ZZ1, SH2O, DF1)
         if ESD > 0:
             SNOWH, SNDENS = self.SNOWPACK(ESD, SNOWH, SNDENS, T1, YY)
         else:
@@ -1996,19 +1960,19 @@ class NoahLSMModule(nn.Module):
 
 
 class NoahPy(nn.Module):
+    """
+    Noah LSM model implemented in PyTorch.
+    This model is based on NoahLSM v3.4.1
+    """
+
     def __init__(self):
+
         super(NoahPy, self).__init__()
         self.NoahLSMModule = None
         torch.set_default_dtype(torch.float32)
         self.RD = torch.tensor(287.04)
         current_dir = os.path.dirname(os.path.abspath(__file__))
-
-        SFCDIFModule_path = os.path.join(current_dir, "SFCDIFModule.pt")
-        NoahLSMModule_path = os.path.join(current_dir, "NoahLSMModule.pt")
-        self.SFCDIFModule = torch.jit.load(SFCDIFModule_path)
-        self.NoahLSMModule = torch.jit.load(NoahLSMModule_path)
-        # self.NoahLSMModule = torch.jit.script(NoahLSMModule())
-        # self.SFCDIFModule = torch.jit.script(SFCDIFModule())
+        self.SFCDIFModule = torch.jit.script(SFCDIFModule())
 
     def month_d(self, a12, nowdate):
         """
@@ -2226,10 +2190,10 @@ class NoahPy(nn.Module):
         for i in range(1, NSOIL):
             ZSOIL[i] = -SLDPTH[i] + ZSOIL[i - 1]
 
-        # NoahLSMModule_ = NoahLSMModule(forcing_filename, VEGTYP, ZSOIL, SLDPTH, SHDMIN, SHDMAX, STYPE, noahlsm_timestep, TBOT, SLOPETYP)
-        # self.NoahLSMModule = torch.jit.script(NoahLSMModule_)
+        NoahLSMModule_ = NoahLSMModule(forcing_filename, VEGTYP, ZSOIL, SLDPTH, SHDMIN, SHDMAX, STYPE, noahlsm_timestep, TBOT, SLOPETYP)
+        self.NoahLSMModule = torch.jit.script(NoahLSMModule_)
         # self.NoahLSMModule = NoahLSMModule_
-        self.NoahLSMModule.set_parameter(VEGTYP, ZSOIL, SLDPTH, SHDMIN, SHDMAX, STYPE, noahlsm_timestep, TBOT, SLOPETYP)
+        # self.NoahLSMModule.set_parameter(VEGTYP, ZSOIL, SLDPTH, SHDMIN, SHDMAX, STYPE, noahlsm_timestep, TBOT, SLOPETYP)
         # torch.jit.save(self.NoahLSMModule, "NoahLSMModule.pt")
 
         return (Date, forcing_data, output_dir, forcing_filename, startdate, enddate, noahlsm_timestep,
@@ -2263,6 +2227,12 @@ class NoahPy(nn.Module):
 
         if trained_parameter is not None:
             self.NoahLSMModule.set_grad_soil_param(trained_parameter)
+        ##################################################################
+        # 依赖输入
+        # forcing_data, output_dir, forcing_filename, noahlsm_timestep
+        # SLDPTH, SHDMIN, SHDMAX, STYPE, TBOT, SLOPETYP, VEGTYP, sfcdif_option
+        # 初始场：ice, T1, STC, SMC, SH2O
+        #################################################################
 
         # CMC = tensor(0.0)
         # SNOWH = tensor(0.0)
@@ -2324,6 +2294,7 @@ class NoahPy(nn.Module):
             """output"""
             out_STC.append(STC - 273.15)
             out_SH2O.append(SH2O)
+            out_SMC.append(SMC)
 
             # CMC, T1, STC, SMC, SH2O,
             # SNOWH, SNEQV,SNOTIME1,
@@ -2337,6 +2308,7 @@ class NoahPy(nn.Module):
 
         """output"""
         NSOIL = SH2O.size(0)
+        condition = (Date >= startdate) & (Date <= enddate)
         if output_flag:
             SH2O_columns = [f'SH2O({i + 1})' for i in range(NSOIL)]
             STC_columns = [f'STC({i + 1})' for i in range(NSOIL)]
@@ -2349,9 +2321,11 @@ class NoahPy(nn.Module):
                              torch.stack(out_SMC),
                              ], dim=1)
             pd.DataFrame(out.detach().numpy(), columns=out_columns,
-                         index=Date[:k_time]).to_csv(os.path.join(output_dir, "NoahPy_output.txt"), index=True, sep=' ')
-        condition = (Date >= startdate) & (Date <= enddate)
+                         index=Date[condition]).to_csv(os.path.join(output_dir, "NoahPy_module_output.csv"), index=True)
+
         return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
+
+
 
 
 

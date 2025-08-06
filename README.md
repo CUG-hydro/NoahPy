@@ -33,7 +33,7 @@ Both versions implement the same core processes and are interchangeable for use.
 The usage of NoahPy varies slightly depending on the version you choose:
 ### Using NoahPy_module (object-oriented version)
 ```python
-from NoahPy_module import NoahPy
+from NoahPy_Module import NoahPy
 model = NoahPy()
 Date, STC, SH2O = model.noah_main(file_name, output_flag=False, lstm_model=None)
 ```
