@@ -44,7 +44,6 @@ from matplotlib import pyplot as plt
 
 from Module_sf_noahlsm import *
 from Module_sfcdif_wrf import *
-from plot_simulate import plot_timeseries
 
 
 def open_forcing_file(forcing_file_path):
@@ -166,7 +165,7 @@ def open_forcing_file(forcing_file_path):
                             'humidity', 'pressure', 'shortwave', 'longwave', 'precipitation', 'LAI', 'NDVI']
     x_target_columns = ['windspeed', 'winddir', 'temperature', 'humidity', 'pressure', 'shortwave', 'longwave',
                         'precipitation', 'LAI', 'NDVI']
-    forcing_data = pd.read_csv(forcing_file_path, sep='\s+', names=forcing_columns_name, header=None,
+    forcing_data = pd.read_csv(forcing_file_path, sep=r'\s+', names=forcing_columns_name, header=None,
                                skiprows=45)
     forcing_data['Date'] = pd.to_datetime(forcing_data[['Year', 'Month', 'Day', 'Hour']])
     forcing_data.set_index('Date', inplace=True)
@@ -459,6 +458,7 @@ def noah_main(file_name, trained_parameter=None, lstm_model=None, output_flag=Fa
         pd.DataFrame(out.detach().numpy(), columns=out_columns,
                      index=Date[condition]).to_csv(os.path.join(output_dir, "NoahPy_output.txt"), index=True)
     return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
+
 
 
 
