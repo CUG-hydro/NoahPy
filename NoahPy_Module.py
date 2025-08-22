@@ -650,7 +650,7 @@ class NoahLSMModule(nn.Module):
         def __init__(self):
             super(NoahLSMModule.SoilParam, self).__init__()
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            soil_param_path = os.path.join(current_dir, "parameter_new\SOILPARM.TBL")
+            soil_param_path = os.path.join(current_dir, r"parameter_new\SOILPARM.TBL")
             soil_parameter = pd.read_csv(soil_param_path, sep=r',\s*', engine='python', header=0, index_col=0,
                                          usecols=range(11),
                                          dtype=np.float32)
@@ -2173,7 +2173,7 @@ class NoahPy(nn.Module):
                                 'humidity', 'pressure', 'shortwave', 'longwave', 'precipitation', 'LAI', 'NDVI']
         x_target_columns = ['windspeed', 'winddir', 'temperature', 'humidity', 'pressure', 'shortwave', 'longwave',
                             'precipitation', 'LAI', 'NDVI']
-        forcing_data = pd.read_csv(forcing_file_path, sep='\s+', names=forcing_columns_name, header=None,
+        forcing_data = pd.read_csv(forcing_file_path, sep=r'\s+', names=forcing_columns_name, header=None,
                                    skiprows=45)
         forcing_data['Date'] = pd.to_datetime(forcing_data[['Year', 'Month', 'Day', 'Hour']])
         forcing_data.set_index('Date', inplace=True)
@@ -2324,6 +2324,7 @@ class NoahPy(nn.Module):
                          index=Date[condition]).to_csv(os.path.join(output_dir, "NoahPy_module_output.csv"), index=True)
 
         return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
+
 
 
 
