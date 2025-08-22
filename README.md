@@ -133,8 +133,13 @@ A = -\frac{D(\theta_{k-1})}{\Delta z_k \Delta \tilde{z}_{k-1}},C=-\frac{D(\theta
 **Finally:**
 ```math
 \begin{align}
-A\Delta t(\theta_{k-1}^{n+1}-\theta_{k-1}^{n})+B(\theta_{k}^{n+1}-\theta_{k}^{n})+C\Delta t(\theta_{k+1}^{n+1}-\theta_{k+1}^{n})=RHSTT\Delta t \\\\
-where RHSTT= [\frac{S}{\Delta z_k}+A(\theta_{k}^{n}-\theta_{k-1}^{n})+C(\theta_{k}^{n}-\theta_{k+1}^{n})]，B=[1-(A+C)\Delta t]
+A\Delta t(\theta_{k-1}^{n+1}-\theta_{k-1}^{n})+B(\theta_{k}^{n+1}-\theta_{k}^{n})+C\Delta t(\theta_{k+1}^{n+1}-\theta_{k+1}^{n})=RHSTT\Delta t \\
+\end{align}
+```
+where,
+```math
+\begin{align}
+RHSTT= [\frac{S}{\Delta z_k}+A(\theta_{k}^{n}-\theta_{k-1}^{n})+C(\theta_{k}^{n}-\theta_{k+1}^{n})]，B=[1-(A+C)\Delta t]
 \end{align}
 ```
 Using matrix representation:
