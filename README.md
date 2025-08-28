@@ -13,7 +13,7 @@ A technical documentation, including a brief introduction to the theoretical bas
 >
 > Web: [https://permalab.science](https://permalab.science)
 > 
-> Citation: Tian, W. & Nan, Z. (2025). wbtian/NoahPy: NoahPy v1.0.0 – Initial Release. Zenodo. [https://doi.org/10.5281/zenodo.16530326](https://doi.org/10.5281/zenodo.16530326)
+> Citation: Tian, W. & Nan, Z. (2025). wbtian/NoahPy: NoahPy v1.0.1. Zenodo. [https://doi.org/10.5281/zenodo.16530326](https://doi.org/10.5281/zenodo.16530326)
 
 July 31, 2025
 
@@ -66,10 +66,10 @@ You may modify these directly in the source code if needed.
 
 ### RNN-wrapped main processes
 
-![mainphysical](https://github.com/user-attachments/assets/28c3c349-2c61-4391-9713-3312ad2aeb9a)
+![mainphysical](https://github.com/user-attachments/assets/b25e4a6c-bdef-4fe1-bc4f-382b026b95b5)
 
-This diagram illustrates the RNN-wrapped physical processes architecture, where $\vec{S_n}$ represents the state vector at the nth moment, $\vec{X_n}$ represents the meteorological forcing vector at the nth moment, $\vec{\theta_p}$ represents the model parameter vector, and $\vec{O_n}$ represents the observation vector at the nth moment.
 
+This diagram illustrates the RNN-wrapped physical processes architecture, where $\vec{S}$ , $\vec{X}$ , $\vec{O}$ represent the meteorological forcing, state, and observation vectors, respectively, $\vec{\beta}$ represents the model parameter vector.
 ## Basic equation
 
 In the land surface process model, the two most fundamental laws are the heat equation and soil water movement equation, both of which are partial differential equations. These equations are often solved using finite difference methods, which ultimately convert them into a system of equations. This conversion allows for the use of differentiable solution methods from machine learning platforms (such as PyTorch and TensorFlow) to enable gradient propagation within the model.
@@ -77,35 +77,36 @@ In the land surface process model, the two most fundamental laws are the heat eq
 ### (1) Heat equation
 $$\frac{\partial}{\partial t }\rho C_p T=\frac{\partial}{\partial z}[\frac{\partial K T}{\partial z}]+Q$$
 
-where, $T_s$ represents the soil temperature; $C_s$ represents the heat capacity of the soil, $λ$ is the heat conduction of the soil. The calculation process for $C_s$ is as follows:
+where, $T_s$ represents the soil temperature (K); $C_s$ represents the soil heat capacity (J·m⁻³·K⁻¹), $λ$ is the soil thermal conductivity (W·m⁻¹·K⁻¹). The calculation process for $C_s$ is as follows:
 ```math
 C_s=\theta C_w+\left(1-\theta_s\right)C_{soil}+\left(\theta_s-\theta\right)C_{air}
 ```
 
-where, $θ$ represents the soil water content; $s$ indicates the porosity of the soil; $C_{w}$, $C_{soil}$, and $C_{air}$ represent the heat capacity of water, soil substrate, and air, respectively.
+where, $θ$ represents the soil water content (m⁻³·m⁻³); $s$ indicates the soil porosity (m⁻³·m⁻³); $C_{w}$, $C_{soil}$, and $C_{air}$ represent the heat capacity of water, soil substrate, and air (J·m⁻³·K⁻¹), respectively.
 
 The fomular for calculating soil heat conduction (λ) is:
 ```math
 \lambda\left(\theta\right)=K_e\left(\lambda_{sat\ }-\lambda_{dry}\right)+\lambda_{dry}
 ```
 
-where $K_e$ is Kersten number, $λ_{sat}$ is the thermal conductivity of  saturated soil, and $λ_{dry}$ is the thermal conductivity of  dry soil.
+where $K_e$ is Kersten number, $λ_{sat}$ is the thermal conductivity of  saturated soil (W·m⁻¹·K⁻¹), and $λ_{dry}$ is the thermal conductivity of  dry soil (W·m⁻¹·K⁻¹).
 
 ### (2) Richards' equation 
 NoahPy describes soil water movement using the Richards equation, formulated as follows:
 ```math
 \frac{\partial \theta}{\partial t} =\frac{\partial }{\partial z}[D(\theta)\frac{\partial \theta}{\partial z}] +\frac{\partial K(\theta)}{\partial z}+S
 ```
-where: $θ$ represents the water content of the soil; $t$ stands for time; $D$ is the soil moisture diffusivity; $K$ is the hydraulic conductivity of soil water, $z$ is the soil depth; $S$ represents soil water sources and sinks (e.g., precipitation, evapotranspiration, and runoff). In this formula, the first term to the right of the equal sign represents the part of soil moisture diffusion driven by the gradient of the soil vertical water potential $Ψ$. The second term on the right side of the equation indicates the part of soil moisture conduction caused by gravity.
+where: $θ$ represents the saturated volumetric water content (m⁻³·m⁻³); $t$ stands for time (s); $D$ is the soil-water diffusivity (m²·s⁻¹); $K$ is the hydraulic conductivity  (m·s⁻¹), $\Psi$ is the soil matric potential (m), $z$ is the soil depth (m); $S$ represents soil water sources and sinks (e.g., infiltration, evapotranspiration). In this formula, the first term to the right of the equal sign represents the part of soil moisture diffusion driven by the gradient of the soil vertical water potential $Ψ$. The second term on the right side of the equation indicates the part of soil moisture conduction caused by gravity.
 
-In NoahPy, the soil hydaulic conductivity $K$ and soil matrix potential $Ψ$ are calculated using the Clapp-Hornberger parameterization scheme:
+
+In NoahPy, the soil hydaulic conductivity $K$ and soil matrix potential $Ψ$ are calculated using the Campbell parameterization scheme:
 ```math
 \begin{align}
 K\left(\theta\right)=K_s\left(\theta/\theta_s\right)^{2b+3} \\\\\
 \Psi\left(\theta\right)=\Psi_s\left(\theta/\theta_s\right)^{-b}
 \end{align}
 ```
-where: $\Psi_s$ is the water potential of saturated soil; $K_s$ and $\theta_s$ are saturated soil water conductivity and soil porosity, respectively. $b$ is an empirical parameter that relates to the pore size distribution of soil matrix.
+where: $\Psi_s$ is the soil water potential at air entry (m); $K_s$ and $\theta_s$ represent the saturated hydraulic conductivity (m·s⁻¹) and saturated volumetric water content (m⁻³·m⁻³), respectively. $b$ is an empirical parameter (dimensionless) related to the pore size distribution of the soil matrix.
 
 ---
 ## Finite Difference Discretization
@@ -121,25 +122,25 @@ The finite difference form of the equation can be derived using the above discre
 
 ```math
 \begin{align}
-\frac{\theta_{k}^{n+1}-\theta_{k}^{n}}{\Delta t} = \frac{1}{\Delta z_k}[D(\theta_{k-1})\frac{\theta_{k-1}^{n+1}-\theta_{k}^{n+1}}{\Delta \tilde{z}_{k-1}}-  D(\theta_{k})\frac{\theta_{k}^{n+1}-\theta_{k+1}^{n+1}}{\Delta \tilde{z}_{k}} + S] \\\\\
-\frac{\theta_{k}^{n+1}-\theta_{k}^{n}}{\Delta t} =-\frac{D(\theta_{k-1})}{\Delta z_k \Delta \tilde{z}_{k-1}} (\theta_{k}^{n+1}-\theta_{k-1}^{n+1})-\frac{D(\theta_{k})}{\Delta z_k \Delta \tilde{z}_{k}}(\theta_{k}^{n+1}-\theta_{k+1}^{n+1})+\frac{S}{\Delta z_k}
+\frac{\theta_{k}^{t+1}-\theta_{k}^{t}}{\Delta t} = \frac{1}{\Delta z_k}[D(\theta_{k-1})\frac{\theta_{k-1}^{t+1}-\theta_{k}^{t+1}}{\Delta \tilde{z}_{k-1}}-  D(\theta_{k})\frac{\theta_{k}^{t+1}-\theta_{k+1}^{t+1}}{\Delta \tilde{z}_{k}} + K_{k-1} - K_k + S] \\\\\
+\frac{\theta_{k}^{t+1}-\theta_{k}^{t}}{\Delta t} =-\frac{D(\theta_{k-1})}{\Delta z_k \Delta \tilde{z}_{k-1}} (\theta_{k}^{t+1}-\theta_{k-1}^{t+1})-\frac{D(\theta_{k})}{\Delta z_k \Delta \tilde{z}_{k}}(\theta_{k}^{t+1}-\theta_{k+1}^{t+1})+\frac{S + K_{k-1} - K_k}{\Delta z_k}
 \end{align}
 ```
 
 **Let:**
 ```math
-A = -\frac{D(\theta_{k-1})}{\Delta z_k \Delta \tilde{z}_{k-1}},C=-\frac{D(\theta_{k})}{\Delta z_k \Delta \tilde{z}_{k}}
+A = -\frac{D(\theta_{k-1}) \Delta t}{\Delta z_k \Delta \tilde{z}_{k-1}},C=-\frac{D(\theta_{k}) \Delta t}{\Delta z_k \Delta \tilde{z}_{k}}
 ```
 **Finally:**
 ```math
 \begin{align}
-A\Delta t(\theta_{k-1}^{n+1}-\theta_{k-1}^{n})+B(\theta_{k}^{n+1}-\theta_{k}^{n})+C\Delta t(\theta_{k+1}^{n+1}-\theta_{k+1}^{n})=RHSTT\Delta t \\
+A(\theta_{k-1}^{t+1}-\theta_{k-1}^{t})+B(\theta_{k}^{t+1}-\theta_{k}^{t})+C(\theta_{k+1}^{t+1}-\theta_{k+1}^{t})=RHS \\
 \end{align}
 ```
 where,
 ```math
 \begin{align}
-RHSTT= [\frac{S}{\Delta z_k}+A(\theta_{k}^{n}-\theta_{k-1}^{n})+C(\theta_{k}^{n}-\theta_{k+1}^{n})]，B=[1-(A+C)\Delta t]
+RHS= [\frac{S + K_{k-1} - K_k}{\Delta z_k} \cdot \Delta t+A(\theta_{k}^{t}-\theta_{k-1}^{t})+C(\theta_{k}^{t}-\theta_{k+1}^{t})]，B=1-(A+C)
 \end{align}
 ```
 Using matrix representation:
@@ -149,25 +150,25 @@ Using matrix representation:
 {A_2}&{B_2}&{C_2}&{0}&{0}&{\cdots}&{0}\\
 {0}&{A_3}&{B_3}&{C_3}&{0}&{\cdots}&{0}\\
 {\vdots}&{\vdots}&{\vdots}&{\vdots}&{\vdots}&{\cdots}&{0}\\
-{0}&{\cdots}&{0}&{0}&{A_{m-1}}&{B_{m-1}}&{C_{m-1}}\\
-{0}&{\cdots}&{0}&{0}&{0}&{A_{m}}&{B_m}\\
+{0}&{\cdots}&{0}&{0}&{A_{k-1}}&{B_{k-1}}&{C_{k-1}}\\
+{0}&{\cdots}&{0}&{0}&{0}&{A_{k}}&{B_k}\\
 \end{bmatrix}
 \begin{bmatrix}
-{\theta_{1}^{n+1}-\theta_{1}^{n}}\\
-{\theta_{2}^{n+1}-\theta_{2}^{n}}\\
-{\theta_{3}^{n+1}-\theta_{3}^{n}}\\
+{\theta_{1}^{t+1}-\theta_{1}^{t}}\\
+{\theta_{2}^{t+1}-\theta_{2}^{t}}\\
+{\theta_{3}^{t+1}-\theta_{3}^{t}}\\
 {\vdots}\\
-{\theta_{m-1}^{n+1}-\theta_{m-1}^{n}}\\
-{\theta_{m}^{n+1}-\theta_{m}^{n}}\\
+{\theta_{k-1}^{t+1}-\theta_{k-1}^{t}}\\
+{\theta_{k}^{t+1}-\theta_{k}^{t}}\\
 \end{bmatrix}
 =
 \begin{bmatrix}
-{RHSTT_1}\\
-{RHSTT_2}\\
-{RHSTT_3}\\
+{RHS_1}\\
+{RHS_2}\\
+{RHS_3}\\
 {\vdots}\\
-{RHSTT_{m-1}}\\
-{RHSTT_{m}}\\
+{RHS_{k-1}}\\
+{RHS_{k}}\\
 \end{bmatrix}
 ```
 
