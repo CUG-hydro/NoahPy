@@ -4,3 +4,4 @@ uv.lock
 *.csv
 *.txt
 backup
+*.egg-info
