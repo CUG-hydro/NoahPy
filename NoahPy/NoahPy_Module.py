@@ -518,8 +518,8 @@ class NoahLSMModule(nn.Module):
             'SLOPE_DATA': tensor([0.1, 0.6, 1.0, 0.35, 0.55, 0.8, 0.63, 0.0, 0.0])
         }
 
-        # current_dir = os.path.dirname(os.path.abspath(__file__))
-        veg_param_path = os.path.join("parameter_new/VEGPARM.TBL")
+        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        veg_param_path = os.path.join(current_dir, "parameter_new/VEGPARM.TBL")
 
         veg_parameter = pd.read_csv(veg_param_path, sep=r',\s*', engine='python', header=0, index_col=0,
                                     usecols=range(16),
@@ -649,8 +649,8 @@ class NoahLSMModule(nn.Module):
     class SoilParam(nn.Module):
         def __init__(self):
             super(NoahLSMModule.SoilParam, self).__init__()
-            # current_dir = os.path.dirname(os.path.abspath(__file__))
-            soil_param_path = os.path.join(r"parameter_new/SOILPARM.TBL")
+            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            soil_param_path = os.path.join(current_dir, "parameter_new/SOILPARM.TBL")
             soil_parameter = pd.read_csv(soil_param_path, sep=r',\s*', engine='python', header=0, index_col=0,
                                          usecols=range(11),
                                          dtype=np.float32)
