@@ -2324,10 +2324,3 @@ class NoahPy(nn.Module):
                          index=Date[condition]).to_csv(os.path.join(output_dir, "NoahPy_module_output.csv"), index=True)
 
         return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
-
-
-
-
-
-
-

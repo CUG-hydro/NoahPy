@@ -459,11 +459,3 @@ def noah_main(file_name, trained_parameter=None, lstm_model=None, output_flag=Fa
                      index=Date[condition]).to_csv(os.path.join(output_dir, "NoahPy_output.txt"), index=True)
     return Date[condition], torch.stack(out_STC), torch.stack(out_SH2O)
 
-
-
-
-
-
-
-
-

@@ -1,4 +1,5 @@
 # NoahPy
+
 A new version of the modified Noah land surface model (Noah LSM v3.4.1) with full backpropagation support. This model has been re-coded in  [Pytorch](https://pytorch.org/) to be fully differentiable, and it includes several key improvements to its representation of physical processes for freeze-thaw cycles compared to the orignal Noah LSM v3.4.1. Detailed descriptions of these enhancements, along with  their applications in simulating permafrost thermal–hydrological processes, can be found in the following references:
 
 - Zhang G, Nan Z, Hu N, Yin Z, Zhao L, Cheng G, Mu C. Qinghai-Tibet Plateau permafrost at risk in the late 21st century. Earth's Future. 2022, 10(6): e2022EF002652. https://doi.org/10.1029/2022EF002652
@@ -16,6 +17,15 @@ A technical documentation, including a brief introduction to the theoretical bas
 > Citation: Tian, W. & Nan, Z. (2025). wbtian/NoahPy: NoahPy v1.0.1. Zenodo. [https://doi.org/10.5281/zenodo.16530326](https://doi.org/10.5281/zenodo.16530326)
 
 July 31, 2025
+
+## Installation
+
+```bash
+uv sync
+.venv\Scripts\activate
+python .\test.py
+```
+
 
 ## Code Structure
 
