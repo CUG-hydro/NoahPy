@@ -42,8 +42,8 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 
 
-from Module_sf_noahlsm import *
-from Module_sfcdif_wrf import *
+from .Module_sf_noahlsm import *
+from .Module_sfcdif_wrf import *
 
 
 def open_forcing_file(forcing_file_path):
@@ -316,7 +316,8 @@ def CALHUM(SFCTMP, SFCPRS):
 
 def noah_main(file_name, trained_parameter=None, lstm_model=None, output_flag=False):
     torch.set_default_dtype(torch.float32)
-    import Module_sf_noahlsm
+    from . import Module_sf_noahlsm
+
     Module_sf_noahlsm.grad_soil_parameter = trained_parameter
     Module_sf_noahlsm.lstm_model = lstm_model
     # torch.autograd.set_detect_anomaly(True)
