@@ -650,7 +650,7 @@ class NoahLSMModule(nn.Module):
         def __init__(self):
             super(NoahLSMModule.SoilParam, self).__init__()
             # current_dir = os.path.dirname(os.path.abspath(__file__))
-            soil_param_path = os.path.join(r"parameter_new\SOILPARM.TBL")
+            soil_param_path = os.path.join(r"parameter_new/SOILPARM.TBL")
             soil_parameter = pd.read_csv(soil_param_path, sep=r',\s*', engine='python', header=0, index_col=0,
                                          usecols=range(11),
                                          dtype=np.float32)
