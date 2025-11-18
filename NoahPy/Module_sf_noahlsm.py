@@ -75,8 +75,8 @@ class SoilParam(nn.Module):
             return bb.detach(), maxSMC.detach(), SATDK.detach(), SATPSI.detach(), QTZ.detach()
 
 
-veg_param_path = "parameter_new/VEGPARM.TBL"
-soil_param_path = "parameter_new/SOILPARM.TBL"
+veg_param_path = "parameter/VEGPARM.TBL"
+soil_param_path = "parameter/SOILPARM.TBL"
 veg_parameter = pd.read_csv(veg_param_path, sep=r',\s*', engine='python', header=0, index_col=0, usecols=range(16),
                             dtype=np.float32)
 soil_parameter = pd.read_csv(soil_param_path, sep=r',\s*', engine='python', header=0, index_col=0, usecols=range(11),
