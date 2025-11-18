@@ -165,6 +165,7 @@ def open_forcing_file(forcing_file_path):
                             'humidity', 'pressure', 'shortwave', 'longwave', 'precipitation', 'LAI', 'NDVI']
     x_target_columns = ['windspeed', 'winddir', 'temperature', 'humidity', 'pressure', 'shortwave', 'longwave',
                         'precipitation', 'LAI', 'NDVI']
+    
     forcing_data = pd.read_csv(forcing_file_path, sep=r'\s+', names=forcing_columns_name, header=None,
                                skiprows=45)
     forcing_data['Date'] = pd.to_datetime(forcing_data[['Year', 'Month', 'Day', 'Hour']])

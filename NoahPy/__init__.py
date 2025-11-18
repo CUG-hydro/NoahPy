@@ -4,6 +4,5 @@
 @Author  ：tianwb
 @Date    ：2024/9/9 上午10:11 
 '''
-from .NoahPy_Module import NoahPy
-
-__all__ = ["NoahPy"]
+# from .NoahPy_Module import NoahPy
+# __all__ = ["NoahPy"]

@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from torch import tensor, Tensor, nn
 
-from .Module_model_constants import EMISSI_S, CP, BARE, TFREEZ
+from .Constants import EMISSI_S, CP, BARE, TFREEZ
 
 
 # from distributed_parallel_train import LSTM

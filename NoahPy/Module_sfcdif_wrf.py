@@ -6,7 +6,7 @@
 '''
 
 from torch import tensor, Tensor
-from .Module_model_constants import *
+from .Constants import *
 
 torch.set_default_dtype(torch.float32)
 ITRMX = torch.tensor(5)
